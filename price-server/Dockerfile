@@ -1,14 +1,18 @@
-FROM node:14-alpine
+FROM node:16-bullseye
 
-WORKDIR /app
+RUN apt-get update && apt-get install -y aria2 lz4 vim
+RUN groupadd -g ${UID} ${MONIKER} \
+    && useradd -u ${UID} -g ${UID} -m ${MONIKER}
+USER ${MONIKER}
 
-COPY package*.json gate-api* ./
+WORKDIR /home/${MONIKER}/app
+
+COPY --chown=${MONIKER}:${MONIKER} package*.json gate-api* ./
 
 RUN npm i --production
 
-COPY tsconfig.json ./
-COPY src ./src
-COPY ./config/docker.js ./config/default.js
+COPY --chown=${MONIKER}:${MONIKER} tsconfig.json ./
+COPY --chown=${MONIKER}:${MONIKER} src ./src
+COPY --chown=${MONIKER}:${MONIKER} ./config/default.js ./config/default.js
 
-ENTRYPOINT [ "npm", "run" ]
-CMD [ "start" ]
+EXPOSE 8532
